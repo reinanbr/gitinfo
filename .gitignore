@@ -1,0 +1,45 @@
+# Binários compilados
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Arquivos de teste
+*.test
+
+# Arquivos de coverage
+*.out
+
+# CLI build artifacts
+cmd/gitinfo-cli/gitinfo-cli
+example/gitinfo-example
+
+# Generated documentation
+docs-generator/docs/
+
+# Diretórios de dependências
+vendor/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+
+# Arquivos temporários
+tmp/
+temp/
