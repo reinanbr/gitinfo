@@ -8,6 +8,7 @@ type GraphQLQuery struct {
 type RepoNode struct {
 	Name             string `json:"name"`
 	CreatedAt        string `json:"createdAt"`
+	Description      string `json:"description"`
 	Url              string `json:"url"`
 	IsPrivate        bool   `json:"isPrivate"`
 	DefaultBranchRef *struct {
@@ -24,6 +25,7 @@ type RepoNode struct {
 			} `json:"node"`
 		} `json:"edges"`
 	} `json:"languages"`
+	LastCommitDate string `json:"lastCommitDate"`
 }
 
 type UserInfo struct {
@@ -132,6 +134,7 @@ type Repository struct {
 			CommittedDate string `json:"committedDate"`
 		} `json:"target"`
 	} `json:"defaultBranchRef"`
+	LastCommitDate string `json:"lastCommitDate"`
 }
 
 // Repo represents a collection of repositories.

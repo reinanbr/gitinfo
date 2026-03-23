@@ -20,6 +20,9 @@ func BuildRepoQuery(username string, cursor *string) string {
       nodes {
         name
         createdAt
+        description
+        url
+        isPrivate
         defaultBranchRef {
           target {
             ... on Commit {

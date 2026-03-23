@@ -1,19 +1,15 @@
 package fetch
 
-
 import (
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
-	"github.com/reinanbr/gitinfo/pkg/utils"
+
 	"github.com/reinanbr/gitinfo/pkg/graphql/query"
-	
+	"github.com/reinanbr/gitinfo/pkg/utils"
 )
-
-
-
 
 func FetchAllRepos(username, token string, cursor *string) ([]utils.RepoNode, error) {
 	if username == "" || token == "" {
@@ -61,6 +57,13 @@ func FetchAllRepos(username, token string, cursor *string) ([]utils.RepoNode, er
 		}
 		nodes = append(nodes, nextNodes...)
 	}
+for i := range nodes {
+    if nodes[i].DefaultBranchRef != nil {
+        nodes[i].LastCommitDate = nodes[i].DefaultBranchRef.Target.CommittedDate
+    } else {
+        nodes[i].LastCommitDate = "N/A"
+    }
+}
 
-	return nodes, nil
+return nodes, nil
 }
