@@ -3,6 +3,7 @@ package gitinfo
 import (
 	"errors"
 	"sort"
+
 	"github.com/reinanbr/gitinfo/pkg/graphql/fetch"
 )
 
@@ -11,19 +12,26 @@ type LangPercentage struct {
 	Percentage float64
 }
 
-func CalculateLanguagePercentages(username string, token string) ([]LangPercentage, int, error) {
+func CalculateLanguagePercentages(username string, token string, ignoreLangs []string) ([]LangPercentage, int, error) {
 
-	repos, err := fetch.FetchAllRepos(username, token, nil)
+	repos, err := fetch.FetchUserLangsFull(username, token)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	langBytes := make(map[string]int)
 
-	for _, repo := range repos {
+	for _, repo := range repos.Repositories.Nodes {
 		for _, edge := range repo.Languages.Edges {
 			lang := edge.Node.Name
-			if lang == "Jupyter Notebook" {
+			shouldIgnore := false
+			for _, ignoreLang := range ignoreLangs {
+				if lang == ignoreLang {
+					shouldIgnore = true
+					break
+				}
+			}
+			if shouldIgnore {
 				continue
 			}
 			langBytes[lang] += edge.Size
