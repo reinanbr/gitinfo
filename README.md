@@ -1,22 +1,26 @@
 # gitinfo
 
-A Go library to fetch GitHub profile and repository insights using the GitHub GraphQL API.
+> A Go library to fetch GitHub profile insights via the GitHub GraphQL API.
 
-It provides helpers for:
-- Repositories (full info and names)
-- Language percentages
-- Contribution streaks (with periods)
-- Commits (by year and by day)
+[![Go Reference](https://pkg.go.dev/badge/github.com/reinanbr/gitinfo.svg)](https://pkg.go.dev/github.com/reinanbr/gitinfo)
+[![Go Version](https://img.shields.io/badge/go-1.21+-00ADD8?logo=go)](https://golang.org)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## Features
+---
 
-- Fetch all repositories for a user
-- Fetch only repository names
-- Calculate language usage percentages across repositories
-- Return max/current contribution streak plus date ranges
-- Return total commits plus:
-  - `commitsByYear` (grouped)
-  - `commitsByDay` (flat daily list, up to current date)
+## Overview
+
+`gitinfo` gives you a clean Go API over GitHub's GraphQL endpoint to pull user and repository data without dealing with pagination, query building, or response parsing yourself.
+
+| Function | What it returns |
+|---|---|
+| `GetReposInfo` | Full repository data for a user |
+| `GetReposName` | Repository names only |
+| `GetLangPercents` | Language usage percentages across all repos |
+| `GetCommits` | Total commits grouped by year and by day |
+| `GetStreaks` | Max and current contribution streak with date ranges |
+
+---
 
 ## Installation
 
@@ -24,11 +28,9 @@ It provides helpers for:
 go get github.com/reinanbr/gitinfo
 ```
 
-## Requirements
+**Requirements:** Go 1.21+ · GitHub Personal Access Token · Internet access to GitHub GraphQL API
 
-- Go 1.21+
-- GitHub Personal Access Token in `GITHUB_TOKEN`
-- Internet access to GitHub GraphQL API
+---
 
 ## Quick Start
 
@@ -37,143 +39,187 @@ package main
 
 import (
     "fmt"
+    "os"
 
     "github.com/reinanbr/gitinfo"
 )
 
 func main() {
-    token := "YOUR_GITHUB_TOKEN"
-    user := "reinanbr"
+    user  := "reinanbr"
+    token := os.Getenv("GITHUB_TOKEN")
 
-    repos, err := gitinfo.GetReposInfo(user, token)
-    if err != nil {
-        panic(err)
-    }
+    repos, _ := gitinfo.GetReposInfo(user, token)
     fmt.Println("repos:", len(repos))
 
-    langs, err := gitinfo.GetLangPercents(user, token, []string{"Jupyter Notebook", "TeX"})
-    if err != nil {
-        panic(err)
-    }
-    fmt.Println("total bytes:", langs.TotalBytes)
+    langs, _ := gitinfo.GetLangPercents(user, token, []string{"Jupyter Notebook", "TeX"})
+    fmt.Printf("top language: %s (%.1f%%)\n", langs.LangPercentages[0].Lang, langs.LangPercentages[0].Percentage)
 
-    streaks, err := gitinfo.GetStreaks(user, token)
-    if err != nil {
-        panic(err)
-    }
-    fmt.Println("streak response:", streaks)
-
-    commits, err := gitinfo.GetCommits(user, token)
-    if err != nil {
-        panic(err)
-    }
+    commits, _ := gitinfo.GetCommits(user, token)
     fmt.Println("total commits:", commits.TotalCommits)
+
+    streaks, _ := gitinfo.GetStreaks(user, token)
+    fmt.Println("streaks:", streaks)
 }
 ```
 
-## Public API
+---
 
-### `GetReposInfo(user, token)`
+## API Reference
 
-Returns detailed repository data.
+### `GetReposInfo(user, token string) ([]RepoNode, error)`
+
+Returns full repository metadata for a user.
 
 ```go
 repos, err := gitinfo.GetReposInfo("reinanbr", token)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(len(repos), "repositories found")
 ```
 
-### `GetReposName(user, token)`
+---
 
-Returns repository names.
+### `GetReposName(user, token string) ([]RepoNode, error)`
+
+Returns only repository names — lighter call for when you just need the list.
 
 ```go
-repoNames, err := gitinfo.GetReposName("reinanbr", token)
+names, err := gitinfo.GetReposName("reinanbr", token)
 ```
 
-### `GetLangPercents(username, token, ignoreLangs)`
+---
 
-Returns percentages and totals:
-- `LangPercentages []LangPercentage`
-- `TotalBytes int`
-- `TotalRepos int`
+### `GetLangPercents(username, token string, ignoreLangs []string) (ResponseLangs, error)`
+
+Returns language distribution across all repositories, sorted by usage.
 
 ```go
-result, err := gitinfo.GetLangPercents("reinanbr", token, []string{"TeX"})
+result, err := gitinfo.GetLangPercents("reinanbr", token, []string{"TeX", "Jupyter Notebook"})
+
+fmt.Println("repos analyzed:", result.TotalRepos)
+fmt.Println("total bytes:   ", result.TotalBytes)
+
+for _, lp := range result.LangPercentages {
+    fmt.Printf("  %-20s %.2f%%\n", lp.Lang, lp.Percentage)
+}
 ```
 
-### `GetStreaks(username, token)`
+**Response type:**
+```go
+type ResponseLangs struct {
+    LangPercentages []LangPercentage
+    TotalBytes      int
+    TotalRepos      int
+}
 
-Returns:
+type LangPercentage struct {
+    Lang       string
+    Percentage float64
+}
+```
 
+---
+
+### `GetCommits(username, token string) (CommitsResponse, error)`
+
+Returns total commits with two views: grouped by year and flat daily list.  
+Future calendar days are automatically filtered out.
+
+```go
+commits, err := gitinfo.GetCommits("reinanbr", token)
+
+fmt.Println("total:", commits.TotalCommits)
+for _, year := range commits.CommitsByYear {
+    fmt.Printf("  %d: %d commits\n", year.Year, len(year.Commits))
+}
+```
+
+**Response type:**
+```go
+type CommitsResponse struct {
+    User          string
+    TotalCommits  int
+    CommitsByYear []CommitsYear
+    CommitsByDay  []CommitByDate
+}
+```
+
+---
+
+### `GetStreaks(username, token string) (map[string]interface{}, error)`
+
+Returns max and current contribution streaks with start/end dates.
+
+```go
+result, err := gitinfo.GetStreaks("reinanbr", token)
+```
+
+**Example response:**
 ```json
 {
   "user": "reinanbr",
   "streak": {
     "max_streak": 46,
-    "current_streak": 0,
-    "max_streak_period": { "start": "2022-12-25", "end": "2023-02-08" },
-    "current_streak_period": { "start": "", "end": "" }
+    "current_streak": 3,
+    "max_streak_period":     { "start": "2022-12-25", "end": "2023-02-08" },
+    "current_streak_period": { "start": "2025-03-27", "end": "2025-03-29" }
   }
 }
 ```
 
-### `GetCommits(username, token)`
+---
 
-Returns:
-- `User`
-- `TotalCommits`
-- `CommitsByYear []CommitsYear`
-- `CommitsByDay []CommitByDate`
+## Testing
 
-`CommitsByDay` includes daily commit counts up to the current date (future calendar days are filtered out).
-
-## Run Tests
-
-Tests use `.env` and expect `GITHUB_TOKEN`:
-
-```bash
-go test -v
-```
-
-Run a specific test:
-
-```bash
-go test -v -run TestGetCommits
-```
-
-## Smoke Test CLI
-
-A CLI is included at `cmd/smoke/main.go` to quickly validate all endpoints before publishing.
-
-### 1) Create `.env`
+Tests are integration tests and require a valid token. Create a `.env` file first:
 
 ```env
 GITHUB_TOKEN=your_token_here
 ```
 
-### 2) Run smoke test
+```bash
+# Run all tests
+go test -v
+
+# Run a specific test
+go test -v -run TestGetCommits
+```
+
+---
+
+## Smoke Test CLI
+
+A CLI at `cmd/smoke` validates all endpoints end-to-end before you publish or deploy.
 
 ```bash
+# Run with env token
 go run ./cmd/smoke -user reinanbr
+
+# Run with explicit token
+go run ./cmd/smoke -user reinanbr -token YOUR_TOKEN
+
+# All flags
+go run ./cmd/smoke -user reinanbr -ignore "Jupyter Notebook,TeX" -show-days
 ```
 
-### 3) Optional flags
+| Flag | Description | Default |
+|---|---|---|
+| `-user` | GitHub username **(required)** | — |
+| `-token` | GitHub token (falls back to `GITHUB_TOKEN`) | — |
+| `-ignore` | Comma-separated languages to ignore | `Jupyter Notebook,TeX` |
+| `-show-days` | Print all `commitsByDay` entries | `false` |
 
-```bash
-go run ./cmd/smoke -user reinanbr -show-days=false -ignore "Jupyter Notebook,TeX"
-```
-
-Flags:
-- `-user` GitHub username (required)
-- `-token` GitHub token (optional if `GITHUB_TOKEN` exists in env/.env)
-- `-ignore` comma-separated ignored languages
-- `-show-days` print all `commitsByDay` entries
+---
 
 ## Notes
 
-- API responses depend on GitHub availability and rate limits.
-- Some tests are integration tests and require a valid token.
-- Keep your token private. Do not commit `.env`.
+- Responses depend on GitHub API availability and your token's rate limits.
+- Never commit your `.env` file — add it to `.gitignore`.
+- Data is fetched from 2015 onwards by default.
+
+---
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE).
+MIT © [reinanbr](https://github.com/reinanbr)
