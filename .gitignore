@@ -43,4 +43,5 @@ Thumbs.db
 # Arquivos temporários
 tmp/
 temp/
-.env
+.envsmoke
+repos
