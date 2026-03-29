@@ -11,6 +11,8 @@
 # Arquivos de coverage
 *.out
 
+.env
+
 # CLI build artifacts
 cmd/gitinfo-cli/gitinfo-cli
 example/gitinfo-example
@@ -44,4 +46,6 @@ Thumbs.db
 tmp/
 temp/
 .envsmoke
+repos
+smoke
 repos
