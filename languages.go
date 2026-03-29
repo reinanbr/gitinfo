@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sort"
 
-	"github.com/reinanbr/gitinfo/pkg/graphql/fetch"
+	"github.com/reinanbr/gitinfo/internal/graphql/fetch"
 )
 
 type LangPercentage struct {
@@ -12,11 +12,16 @@ type LangPercentage struct {
 	Percentage float64
 }
 
-func CalculateLanguagePercentages(username string, token string, ignoreLangs []string) ([]LangPercentage, int, error) {
+type ResponseLangs struct {
+	LangPercentages []LangPercentage
+	TotalBytes     int
+	TotalRepos       int
+}
+func GetLangPercents(username string, token string, ignoreLangs []string) (ResponseLangs, error) {
 
 	repos, err := fetch.FetchUserLangsFull(username, token)
 	if err != nil {
-		return nil, 0, err
+		return ResponseLangs{}, err
 	}
 
 	langBytes := make(map[string]int)
@@ -44,7 +49,7 @@ func CalculateLanguagePercentages(username string, token string, ignoreLangs []s
 	}
 
 	if totalBytes == 0 {
-		return nil, 0, errors.New("no language data found")
+		return ResponseLangs{}, errors.New("no language data found")
 	}
 
 	// Cria slice de LangPercentage
@@ -59,5 +64,9 @@ func CalculateLanguagePercentages(username string, token string, ignoreLangs []s
 		return langPercentages[i].Percentage > langPercentages[j].Percentage
 	})
 
-	return langPercentages, totalBytes, nil
+	return ResponseLangs{
+		LangPercentages: langPercentages,
+		TotalBytes:     totalBytes,
+		TotalRepos:       len(repos.Repositories.Nodes),
+	},nil
 }

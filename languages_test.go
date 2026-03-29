@@ -16,13 +16,16 @@ func TestLangPercent(t *testing.T) {
 	if !ok {
 		t.Fatal("GITHUB_TOKEN not found in .env file")
 	}
-	ignoreLangs := []string{"Jupyter Notebook"}
-	langPercentages, totalBytes, err := CalculateLanguagePercentages("reinanbr", githubToken, ignoreLangs)
+	ignoreLangs := []string{"Jupyter Notebook","TeX"}
+	langPercentages, err := GetLangPercents("reinanbr", githubToken, ignoreLangs)
 	if err != nil {
 		t.Fatalf("Error calculating language percentages: %v\n", err)
 	}
-	t.Logf("Total bytes: %d\n", totalBytes)
-	for _, lp := range langPercentages {
+	t.Logf("Total bytes: %d\n", langPercentages.TotalBytes)
+	t.Logf("Total repos: %d\n", langPercentages.TotalRepos)
+	t.Logf("Language percentages:")
+	for _, lp := range langPercentages.LangPercentages {
 		t.Logf("Language: %s, Percentage: %.2f%%\n", lp.Lang, lp.Percentage)
 	}
+	
 }

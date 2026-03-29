@@ -18,7 +18,7 @@ func main() {
 
 	//links
 	fmt.Printf("Repos link of %s:\n", user)
-	reposName, err := gitinfo.GetRepos(user, token)
+	reposName, err := gitinfo.GetReposName(user, token)
 	if err != nil {
 		fmt.Printf("Error fetching repos name: %v\n", err)
 		return
