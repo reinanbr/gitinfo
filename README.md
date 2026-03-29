@@ -58,7 +58,8 @@ func main() {
     fmt.Println("total commits:", commits.TotalCommits)
 
     streaks, _ := gitinfo.GetStreaks(user, token)
-    fmt.Println("streaks:", streaks)
+    fmt.Println("max streak:", streaks.Streak.MaxStreak)
+    fmt.Println("current streak:", streaks.Streak.CurrentStreak)
 }
 ```
 
@@ -147,24 +148,39 @@ type CommitsResponse struct {
 
 ---
 
-### `GetStreaks(username, token string) (map[string]interface{}, error)`
+### `GetStreaks(username, token string) (StreakResponse, error)`
 
-Returns max and current contribution streaks with start/end dates.
+Returns max and current contribution streaks with start/end dates as a typed struct — no type assertions needed.
 
 ```go
 result, err := gitinfo.GetStreaks("reinanbr", token)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Println("max streak:    ", result.Streak.MaxStreak)
+fmt.Println("current streak:", result.Streak.CurrentStreak)
+fmt.Println("max period:    ", result.Streak.MaxStreakPeriod.Start, "->", result.Streak.MaxStreakPeriod.End)
+fmt.Println("current period:", result.Streak.CurrentStreakPeriod.Start, "->", result.Streak.CurrentStreakPeriod.End)
 ```
 
-**Example response:**
-```json
-{
-  "user": "reinanbr",
-  "streak": {
-    "max_streak": 46,
-    "current_streak": 3,
-    "max_streak_period":     { "start": "2022-12-25", "end": "2023-02-08" },
-    "current_streak_period": { "start": "2025-03-27", "end": "2025-03-29" }
-  }
+**Response type:**
+```go
+type StreakResponse struct {
+    User   string     `json:"user"`
+    Streak StreakData `json:"streak"`
+}
+
+type StreakData struct {
+    MaxStreak           int          `json:"max_streak"`
+    CurrentStreak       int          `json:"current_streak"`
+    MaxStreakPeriod     StreakPeriod `json:"max_streak_period"`
+    CurrentStreakPeriod StreakPeriod `json:"current_streak_period"`
+}
+
+type StreakPeriod struct {
+    Start string `json:"start"`
+    End   string `json:"end"`
 }
 ```
 

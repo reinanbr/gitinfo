@@ -82,8 +82,8 @@ func ExampleGetStreaks() {
 		return
 	}
 
-	_, hasUser := result["user"]
-	_, hasStreak := result["streak"]
+	hasUser := result.User != ""
+	hasStreak := result.Streak.MaxStreak >= 0
 
 	fmt.Println(hasUser)
 	fmt.Println(hasStreak)
