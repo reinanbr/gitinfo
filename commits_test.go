@@ -169,45 +169,12 @@ func TestGetCommits(t *testing.T) {
 		t.Fatalf("Error fetching streaks: %v\n", err)
 	}
 
-	streakData, ok := mapFromAny(streakResp["streak"])
-	if !ok {
-		t.Fatalf("streak response has unexpected type: %T", streakResp["streak"])
-	}
-
-	realMax, ok := intFromAny(streakData["max_streak"])
-	if !ok {
-		t.Fatalf("max_streak has unexpected type: %T", streakData["max_streak"])
-	}
-	realCurrent, ok := intFromAny(streakData["current_streak"])
-	if !ok {
-		t.Fatalf("current_streak has unexpected type: %T", streakData["current_streak"])
-	}
-
-	realMaxPeriod, ok := mapFromAny(streakData["max_streak_period"])
-	if !ok {
-		t.Fatalf("max_streak_period has unexpected type: %T", streakData["max_streak_period"])
-	}
-	realCurrentPeriod, ok := mapFromAny(streakData["current_streak_period"])
-	if !ok {
-		t.Fatalf("current_streak_period has unexpected type: %T", streakData["current_streak_period"])
-	}
-
-	realMaxStart, ok := stringFromAny(realMaxPeriod["start"])
-	if !ok {
-		t.Fatalf("max_streak_period.start has unexpected type: %T", realMaxPeriod["start"])
-	}
-	realMaxEnd, ok := stringFromAny(realMaxPeriod["end"])
-	if !ok {
-		t.Fatalf("max_streak_period.end has unexpected type: %T", realMaxPeriod["end"])
-	}
-	realCurrentStart, ok := stringFromAny(realCurrentPeriod["start"])
-	if !ok {
-		t.Fatalf("current_streak_period.start has unexpected type: %T", realCurrentPeriod["start"])
-	}
-	realCurrentEnd, ok := stringFromAny(realCurrentPeriod["end"])
-	if !ok {
-		t.Fatalf("current_streak_period.end has unexpected type: %T", realCurrentPeriod["end"])
-	}
+	realMax := streakResp.Streak.MaxStreak
+	realCurrent := streakResp.Streak.CurrentStreak
+	realMaxStart := streakResp.Streak.MaxStreakPeriod.Start
+	realMaxEnd := streakResp.Streak.MaxStreakPeriod.End
+	realCurrentStart := streakResp.Streak.CurrentStreakPeriod.Start
+	realCurrentEnd := streakResp.Streak.CurrentStreakPeriod.End
 
 	if calcMax != realMax {
 		t.Fatalf("max streak mismatch (calculated: %d, real: %d)", calcMax, realMax)
