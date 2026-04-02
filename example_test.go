@@ -91,3 +91,19 @@ func ExampleGetStreaks() {
 	// true
 	// true
 }
+
+func ExampleGetUserInfo() {
+	token := os.Getenv("GITHUB_TOKEN")
+
+	result, err := gitinfo.GetUserInfo("reinanbr", token)
+	if err != nil {
+		fmt.Println("error:", err)
+		return
+	}
+
+	fmt.Println(result.Login != "")
+	fmt.Println(result.URL != "")
+	// Output:
+	// true
+	// true
+}

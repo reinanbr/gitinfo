@@ -28,11 +28,22 @@ type RepoNode struct {
 }
 
 type UserInfo struct {
+	ID        string `json:"id"`
 	Name      string `json:"name"`
 	Login     string `json:"login"`
 	Bio       string `json:"bio"`
 	AvatarUrl string `json:"avatarUrl"`
 	CreatedAt string `json:"createdAt"`
+	URL       string `json:"url"`
+	Followers struct {
+		TotalCount int `json:"totalCount"`
+	} `json:"followers"`
+	Following struct {
+		TotalCount int `json:"totalCount"`
+	} `json:"following"`
+	Repositories struct {
+		TotalCount int `json:"totalCount"`
+	} `json:"repositories"`
 }
 
 type RepoResponse struct {

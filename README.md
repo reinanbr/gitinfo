@@ -16,6 +16,7 @@
 |---|---|
 | `GetReposInfo` | Full repository data for a user |
 | `GetReposName` | Repository names only |
+| `GetUserInfo` | Basic user profile data and counts |
 | `GetLangPercents` | Language usage percentages across all repos |
 | `GetCommits` | Total commits grouped by year and by day |
 | `GetStreaks` | Max and current contribution streak with date ranges |
@@ -47,6 +48,10 @@ import (
 func main() {
     user  := "reinanbr"
     token := os.Getenv("GITHUB_TOKEN")
+
+    info, _ := gitinfo.GetUserInfo(user, token)
+    fmt.Println("name:", info.Name)
+    fmt.Println("followers:", info.Followers.TotalCount)
 
     repos, _ := gitinfo.GetReposInfo(user, token)
     fmt.Println("repos:", len(repos))
@@ -87,6 +92,42 @@ Returns only repository names — lighter call for when you just need the list.
 
 ```go
 names, err := gitinfo.GetReposName("reinanbr", token)
+```
+
+---
+
+### `GetUserInfo(username, token string) (UserInfo, error)`
+
+Returns user profile data (name, bio, avatar, created date) and basic counts.
+
+```go
+info, err := gitinfo.GetUserInfo("reinanbr", token)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(info.Login, info.URL)
+```
+
+**Response type:**
+```go
+type UserInfo struct {
+    ID        string
+    Name      string
+    Login     string
+    Bio       string
+    AvatarUrl string
+    CreatedAt string
+    URL       string
+    Followers struct {
+        TotalCount int
+    }
+    Following struct {
+        TotalCount int
+    }
+    Repositories struct {
+        TotalCount int
+    }
+}
 ```
 
 ---
