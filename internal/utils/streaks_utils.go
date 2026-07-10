@@ -28,14 +28,20 @@ func GenerateYearRange(start, end int) []int {
 }
 
 // GetContributionStreaks calculates maximum/current streaks and their date periods.
+//
+// A streak is considered "current" if its last contribution day is today or
+// yesterday - it doesn't break just because today's contribution hasn't
+// happened yet (the day isn't over).
 func GetContributionStreaks(responses map[int]Response) (int, int, string, string, string, string) {
 	const dateLayout = "2006-01-02"
 
-	var maxStreak, currentStreak, tempStreak int
-	var maxStart, maxEnd, currentStart, currentEnd string
+	var maxStreak, tempStreak int
+	var maxStart, maxEnd string
 	var tempStartDate, tempEndDate time.Time
 	var lastContributionDate time.Time
-	lastDayHadContribution := false
+	var lastStreak int
+	var lastStreakStart, lastStreakEnd time.Time
+	hasContribution := false
 
 	sortedYears := make([]int, 0, len(responses))
 	for year := range responses {
@@ -63,7 +69,11 @@ func GetContributionStreaks(responses map[int]Response) (int, int, string, strin
 					}
 
 					lastContributionDate = date
-					lastDayHadContribution = true
+					hasContribution = true
+					lastStreak = tempStreak
+					lastStreakStart = tempStartDate
+					lastStreakEnd = tempEndDate
+
 					if tempStreak > maxStreak {
 						maxStreak = tempStreak
 						maxStart = tempStartDate.Format(dateLayout)
@@ -71,16 +81,21 @@ func GetContributionStreaks(responses map[int]Response) (int, int, string, strin
 					}
 				} else {
 					tempStreak = 0
-					lastDayHadContribution = false
 				}
 			}
 		}
 	}
 
-	if lastDayHadContribution && tempStreak > 0 {
-		currentStreak = tempStreak
-		currentStart = tempStartDate.Format(dateLayout)
-		currentEnd = tempEndDate.Format(dateLayout)
+	var currentStreak int
+	var currentStart, currentEnd string
+	if hasContribution {
+		today := time.Now().UTC().Truncate(24 * time.Hour)
+		daysSinceLastContribution := today.Sub(lastContributionDate).Hours() / 24
+		if daysSinceLastContribution <= 1 {
+			currentStreak = lastStreak
+			currentStart = lastStreakStart.Format(dateLayout)
+			currentEnd = lastStreakEnd.Format(dateLayout)
+		}
 	}
 
 	return maxStreak, currentStreak, maxStart, maxEnd, currentStart, currentEnd
