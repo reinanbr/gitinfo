@@ -20,6 +20,8 @@
 | `GetLangPercents` | Language usage percentages across all repos |
 | `GetCommits` | Total commits grouped by year and by day |
 | `GetStreaks` | Max and current contribution streak with date ranges |
+| `GetTotalStars` | Total stargazer count summed across a user's public repos |
+| `GetProfile` | Identity + repo/follower/star counts + commits + streaks, in one concurrent call |
 
 ---
 
@@ -65,6 +67,12 @@ func main() {
     streaks, _ := gitinfo.GetStreaks(user, token)
     fmt.Println("max streak:", streaks.Streak.MaxStreak)
     fmt.Println("current streak:", streaks.Streak.CurrentStreak)
+
+    stars, _ := gitinfo.GetTotalStars(user, token)
+    fmt.Println("total stars:", stars)
+
+    profile, _ := gitinfo.GetProfile(user, token)
+    fmt.Println("profile:", profile.Name, profile.Location, profile.TotalStars)
 }
 ```
 
@@ -111,13 +119,18 @@ fmt.Println(info.Login, info.URL)
 **Response type:**
 ```go
 type UserInfo struct {
-    ID        string
-    Name      string
-    Login     string
-    Bio       string
-    AvatarUrl string
-    CreatedAt string
-    URL       string
+    ID              string
+    Name            string
+    Login           string
+    Bio             string
+    AvatarUrl       string
+    CreatedAt       string
+    URL             string
+    Location        string // free-text, as typed by the user — not a validated country
+    Company         string
+    WebsiteUrl      string
+    TwitterUsername string
+    IsHireable      bool
     Followers struct {
         TotalCount int
     }
@@ -224,6 +237,70 @@ type StreakPeriod struct {
     End   string `json:"end"`
 }
 ```
+
+---
+
+### `GetTotalStars(username, token string) (int, error)`
+
+Sums `stargazerCount` across every public repository a user owns. GitHub's
+GraphQL API has no direct "total stars received" field on a user, so this
+walks the same paginated repository list `GetReposInfo` uses and adds it up.
+
+```go
+stars, err := gitinfo.GetTotalStars("reinanbr", token)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println("total stars:", stars)
+```
+
+---
+
+### `GetProfile(username, token string) (ProfileInfo, error)`
+
+Fetches the core "who is this user" snapshot in one call: identity fields,
+repo/follower/star counts, total commits, and streaks. The four underlying
+GraphQL calls (`GetUserInfo`, `GetStreaks`, `GetCommits`, `GetTotalStars`)
+run concurrently.
+
+```go
+profile, err := gitinfo.GetProfile("reinanbr", token)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(profile.Name, profile.Bio, profile.Location)
+fmt.Println("repos:", profile.TotalRepos, "stars:", profile.TotalStars)
+fmt.Println("streak:", profile.CurrentStreak, "/", profile.MaxStreak)
+```
+
+**Response type:**
+```go
+type ProfileInfo struct {
+    ID              string `json:"id"`
+    Name            string `json:"name"`
+    Username        string `json:"username"`
+    Bio             string `json:"bio"`
+    AvatarUrl       string `json:"avatar_url"`
+    URL             string `json:"url"`
+    CreatedAt       string `json:"created_at"`
+    Location        string `json:"location"`
+    Company         string `json:"company"`
+    WebsiteUrl      string `json:"website_url"`
+    TwitterUsername string `json:"twitter_username"`
+    IsHireable      bool   `json:"is_hireable"`
+    TotalRepos      int    `json:"total_repos"`
+    TotalStars      int    `json:"total_stars"`
+    TotalCommits    int    `json:"total_commits"`
+    TotalFollowers  int    `json:"total_followers"`
+    TotalFollowing  int    `json:"total_following"`
+    CurrentStreak   int    `json:"current_streak"`
+    MaxStreak       int    `json:"max_streak"`
+}
+```
+
+> **Not included:** GitHub Pro/paid-plan status. GitHub's API only exposes
+> that for the authenticated viewer's own account, never for arbitrary
+> usernames — there's no honest way to report it here.
 
 ---
 

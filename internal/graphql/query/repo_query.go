@@ -23,6 +23,7 @@ func BuildRepoQuery(username string, cursor *string) string {
         description
         url
         isPrivate
+        stargazerCount
         defaultBranchRef {
           target {
             ... on Commit {

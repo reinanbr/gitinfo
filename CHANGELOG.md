@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.4.0
+
+- Add `GetProfile`, combining identity, repo/follower/star counts, total commits, and streaks into a single concurrent call.
+- Add `GetTotalStars`, summing `stargazerCount` across a user's public repositories.
+- Extend `UserInfo` with `Location`, `Company`, `WebsiteUrl`, `TwitterUsername`, and `IsHireable`.
+- Extend `RepoNode` with `StargazerCount`.
+- Note: GitHub's API doesn't expose a paid-plan ("Pro") flag for arbitrary users, only for the authenticated viewer — `ProfileInfo` has no such field.
+
 ## v0.3.3
 
 - Fix `GetStreaks` reporting `current_streak: 0` when today has no contribution yet. The current streak now stays valid through a one-day grace period (last contribution today or yesterday) instead of breaking before the day is even over.

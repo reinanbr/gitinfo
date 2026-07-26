@@ -10,6 +10,7 @@ type RepoNode struct {
 	Description      string `json:"description"`
 	Url              string `json:"url"`
 	IsPrivate        bool   `json:"isPrivate"`
+	StargazerCount   int    `json:"stargazerCount"`
 	DefaultBranchRef *struct {
 		Target struct {
 			CommittedDate string `json:"committedDate"`
@@ -28,14 +29,19 @@ type RepoNode struct {
 }
 
 type UserInfo struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	Login     string `json:"login"`
-	Bio       string `json:"bio"`
-	AvatarUrl string `json:"avatarUrl"`
-	CreatedAt string `json:"createdAt"`
-	URL       string `json:"url"`
-	Followers struct {
+	ID              string `json:"id"`
+	Name            string `json:"name"`
+	Login           string `json:"login"`
+	Bio             string `json:"bio"`
+	AvatarUrl       string `json:"avatarUrl"`
+	CreatedAt       string `json:"createdAt"`
+	URL             string `json:"url"`
+	Location        string `json:"location"`
+	Company         string `json:"company"`
+	WebsiteUrl      string `json:"websiteUrl"`
+	TwitterUsername string `json:"twitterUsername"`
+	IsHireable      bool   `json:"isHireable"`
+	Followers       struct {
 		TotalCount int `json:"totalCount"`
 	} `json:"followers"`
 	Following struct {

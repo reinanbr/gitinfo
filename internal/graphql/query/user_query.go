@@ -14,6 +14,11 @@ func BuildUserQuery(username string) string {
 			avatarUrl
 			createdAt
 			url
+			location
+			company
+			websiteUrl
+			twitterUsername
+			isHireable
 			followers {
 				totalCount
 			}
